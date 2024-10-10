@@ -1,0 +1,22 @@
+# Compiled object files
+*.o
+
+# Compiled binary files
+*.exe
+*.out
+json_validator  # Exclude the compiled executable
+
+# Backup files
+*~
+
+# IDE files
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Temporary files
+*.tmp
+*.temp
+
+# Debug files
+*.dSYM/
