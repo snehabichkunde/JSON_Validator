@@ -1,5 +1,6 @@
 #include<iostream>
 #include "../include/file_reader.h"
+#include "../include/error_dectection.h"
 
 int main(int argc, char* argv[])
 {
@@ -18,5 +19,11 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+    if(detectErrors(content)){
+        std::cerr << "Error: Syntax Error" << std::endl;
+        return 1;
+    }
+
+    std::cout << "JSON file is valid!" << std::endl;
     return 0;
 }

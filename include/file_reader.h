@@ -1,3 +1,5 @@
+// to read the file and getting the content of the file in a string 
+
 #ifndef FILE_READER_H
 #define FILE_READER_H
 // if not defined FILE_READER_H yet define FILE_READER_H
