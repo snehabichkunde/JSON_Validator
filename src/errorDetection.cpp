@@ -1,4 +1,5 @@
 #include<iostream>
+#include <regex>
 #include "../include/error_dectection.h"
 
 bool detectErrors(const std:: string& jsonContent)
@@ -11,7 +12,7 @@ bool detectErrors(const std:: string& jsonContent)
     if(checkCommas(jsonContent)){
         hasError = true;
     }
-    if(checkQuotes(jsonContent)){
+    if(checkKeyValuePair(jsonContent)){
         hasError = true;
     }
     return hasError;
@@ -46,15 +47,121 @@ bool checkBrackets(const std::string& jsonContent)
     return true;
 }
 
-bool checkQuotes(const std::string& jsonContent){
-    // need to write logic here 
+bool checkKeyValuePair(const std::string& jsonContent) {
+    if (jsonContent[0] != '{') {
+        std::cerr << "Error: Opening Bracket is missing" << std::endl;
+        return true;
+    }
+    if (jsonContent[jsonContent.size() - 1] != '}') {
+        std::cerr << "Error: Closing Bracket is missing" << std::endl;
+        return true;
+    }
+
+    size_t i = 1;
+    while (i < jsonContent.size() - 1) {
+        // Skip whitespace
+        while (i < jsonContent.size() - 1 && std::isspace(jsonContent[i])) {
+            i++;
+        }
+
+        // Extract key
+        if (jsonContent[i] != '\"') {
+            std::cerr << "Syntax Error: Key must be enclosed in quotes." << std::endl;
+            return true;
+        }
+        i++;
+
+        std::string key;
+        while (jsonContent[i] != '\"' && i < jsonContent.size() - 1) {
+            key += jsonContent[i];
+            i++;
+        }
+
+        if (jsonContent[i] != '\"') {
+            std::cerr << "Syntax Error: Key must be enclosed in quotes." << std::endl;
+            return true;
+        }
+
+        // Validate key
+        if (!validKey(key)) {
+            std::cerr << "Error: Invalid Key: \"" << key << "\"" << std::endl;
+            return true;
+        }
+
+        i++; // Move past closing quote
+
+        // Check for colon
+        while (i < jsonContent.size() - 1 && std::isspace(jsonContent[i])) {
+            i++;
+        }
+        if (jsonContent[i] != ':') {
+            std::cerr << "Syntax Error: Missing colon (:) after key." << std::endl;
+            return true;
+        }
+        i++; // Move past colon
+
+        // Skip whitespace for value
+        while (i < jsonContent.size() - 1 && std::isspace(jsonContent[i])) {
+            i++;
+        }
+
+        // Implement logic to check for valid value
+        // ...
+
+        // Skip to next key-value pair
+        while (i < jsonContent.size() - 1 && jsonContent[i] != ',') {
+            i++;
+        }
+        if (jsonContent[i] == ',') {
+            i++; // Move past comma for the next iteration
+        }
+    }
 
     return false;
 }
 
+
+
+
+bool validKey(const std::string& key) {
+    std::cout << "Validating key: \"" << key << "\"" << std::endl;
+
+    // Check if the key starts and ends with a double quote
+    // if (key.empty() || key.front() != '\"' || key.back() != '\"') {
+    //     std::cerr << "Error: Key must start and end with double quotes." << std::endl;
+    //     return false;
+    // }
+
+    // Initialize a counter for escape sequences
+    bool isEscaped = false;
+
+    // Iterate through the key excluding the surrounding quotes
+    for (size_t i = 1; i < key.length() - 1; ++i) {
+        char ch = key[i];
+
+        // Check for escape character
+        if (ch == '\\') {
+            isEscaped = !isEscaped; // Toggle the escaped state
+            continue;
+        }
+
+        // If not escaped, check for invalid characters
+        if (!isEscaped && (ch == '\"' || ch == '\n' || ch == '\r' || ch == '\t')) {
+            std::cerr << "Error: Invalid character in key: \"" << key << "\"" << std::endl;
+            return false;
+        }
+
+        // Reset the escape state after processing a valid character
+        isEscaped = false;
+    }
+
+    // If we reach here, the key is valid
+    return true;
+}
+
+
+
 bool checkCommas(const std::string& jsonContent){
     // need to write logic here 
-
-
     return false;
 }

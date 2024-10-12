@@ -13,8 +13,9 @@
 bool detectErrors(const std::string& jsonContent);
 
 bool checkBrackets(const std::string& jsonContent);
-bool checkQuotes(const std::string& jsonContent);
+bool checkKeyValuePair(const std::string& jsonContent);
 bool checkCommas(const std::string& jsonContent);
+bool validKey(const std:: string& key);
 
 
 
