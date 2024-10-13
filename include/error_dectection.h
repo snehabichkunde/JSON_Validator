@@ -16,7 +16,7 @@ bool checkBrackets(const std::string& jsonContent);
 bool checkKeyValuePair(const std::string& jsonContent);
 bool checkCommas(const std::string& jsonContent);
 bool validKey(const std:: string& key);
-
+bool checkValidObject(const std::string &object);
 
 
 #endif // ERROR_DETECTION_H

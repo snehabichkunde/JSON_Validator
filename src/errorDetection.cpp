@@ -21,7 +21,7 @@ bool detectErrors(const std:: string& jsonContent)
 bool checkBrackets(const std::string& jsonContent)
 {
     std:: stack<char>st;
-    for(size_t i = 0; i < jsonContent.size(); ++i){
+    for(int i = 0; i < jsonContent.size(); ++i){
         char ch = jsonContent[i];
         if(ch == '{' || ch == '['){
             st.push(ch);
@@ -57,7 +57,7 @@ bool checkKeyValuePair(const std::string& jsonContent) {
         return true;
     }
 
-    size_t i = 1;
+    int i = 1;
     while (i < jsonContent.size() - 1) {
         // Skip whitespace
         while (i < jsonContent.size() - 1 && std::isspace(jsonContent[i])) {
@@ -104,9 +104,26 @@ bool checkKeyValuePair(const std::string& jsonContent) {
         while (i < jsonContent.size() - 1 && std::isspace(jsonContent[i])) {
             i++;
         }
-
+        
         // Implement logic to check for valid value
         // ...
+        // value can be array, string , number , object 
+        // lets check for the object 
+        if(jsonContent[i] == '{') {
+            std::string obj = "";
+            while(jsonContent[i] != '}') {
+                obj += jsonContent[i];
+                i++;
+            }
+            obj += jsonContent[i]; // include closing '}'
+            i++; // Move past the closing brace
+
+            if(!checkValidObject(obj)) {
+            std::cerr << "Invalid object: " << obj << std::endl;
+            return true;
+        }
+}
+
 
         // Skip to next key-value pair
         while (i < jsonContent.size() - 1 && jsonContent[i] != ',') {
@@ -122,21 +139,13 @@ bool checkKeyValuePair(const std::string& jsonContent) {
 
 
 
-
 bool validKey(const std::string& key) {
-    std::cout << "Validating key: \"" << key << "\"" << std::endl;
-
-    // Check if the key starts and ends with a double quote
-    // if (key.empty() || key.front() != '\"' || key.back() != '\"') {
-    //     std::cerr << "Error: Key must start and end with double quotes." << std::endl;
-    //     return false;
-    // }
 
     // Initialize a counter for escape sequences
     bool isEscaped = false;
 
     // Iterate through the key excluding the surrounding quotes
-    for (size_t i = 1; i < key.length() - 1; ++i) {
+    for (int i = 1; i < key.length() - 1; ++i) {
         char ch = key[i];
 
         // Check for escape character
@@ -156,6 +165,15 @@ bool validKey(const std::string& key) {
     }
 
     // If we reach here, the key is valid
+    return true;
+}
+
+bool checkValidObject(const std::string &object)
+{
+    if(detectErrors(object)){
+        //std::cout << "Hey" << std:: endl;
+        return false;
+    }
     return true;
 }
 
