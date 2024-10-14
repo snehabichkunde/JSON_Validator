@@ -56,8 +56,10 @@ bool checkKeyValuePair(const std::string& jsonContent) {
         std::cerr << "Error: Closing Bracket is missing" << std::endl;
         return true;
     }
-
     int i = 1;
+    while (i < jsonContent.size() - 1 && std::isspace(jsonContent[i])) {
+            i++;
+        }
     while (i < jsonContent.size() - 1) {
         // Skip whitespace
         while (i < jsonContent.size() - 1 && std::isspace(jsonContent[i])) {
@@ -66,6 +68,7 @@ bool checkKeyValuePair(const std::string& jsonContent) {
 
         // Extract key
         if (jsonContent[i] != '\"') {
+            //std:: cout << "Hey I am here" << std:: endl;
             std::cerr << "Syntax Error: Key must be enclosed in quotes." << std::endl;
             return true;
         }
@@ -119,19 +122,44 @@ bool checkKeyValuePair(const std::string& jsonContent) {
             i++; // Move past the closing brace
 
             if(!checkValidObject(obj)) {
-            std::cerr << "Invalid object: " << obj << std::endl;
-            return true;
+                std::cerr << "Invalid object: " << std::endl;
+                return true;
+            }
         }
-}
 
-
-        // Skip to next key-value pair
-        while (i < jsonContent.size() - 1 && jsonContent[i] != ',') {
+        // lets check for string 
+        if(jsonContent[i] == '\"') { // Start of string value
+            i++; // Move past the opening quote
+            std::string str = "";
+    
+            while (i < jsonContent.length() && jsonContent[i] != '\"') {
+                // Handle escape sequences (like \")
+                if (jsonContent[i] == '\\' && i + 1 < jsonContent.length()) {
+                    str += jsonContent[i]; // Add escape character
+                    i++;
+                    str += jsonContent[i]; // Add the escaped character
+                } else {
+            str += jsonContent[i];
+            }
             i++;
         }
-        if (jsonContent[i] == ',') {
-            i++; // Move past comma for the next iteration
-        }
+
+            if (jsonContent[i] != '\"') {
+               std::cerr << "Error: missing \" in the value" << std::endl;
+            return true;
+            }
+            i++; // Move past the closing quote
+
+    // No need to validate string values with validKey function
+}
+
+        // Skip to next key-value pair
+        // while (i < jsonContent.size() - 1 && jsonContent[i] != ',') {
+        //     i++;
+        // }
+        // if (jsonContent[i] == ',') {
+        //     i++; // Move past comma for the next iteration
+        // }
     }
 
     return false;
@@ -171,7 +199,6 @@ bool validKey(const std::string& key) {
 bool checkValidObject(const std::string &object)
 {
     if(detectErrors(object)){
-        //std::cout << "Hey" << std:: endl;
         return false;
     }
     return true;
