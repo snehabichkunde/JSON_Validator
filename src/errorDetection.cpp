@@ -145,17 +145,44 @@ bool checkKeyValuePair(const std::string& jsonContent) {
 
             i++;  // Move past the closing quote
         }
+        // if the value is number 
+        else if(std::isdigit(jsonContent[i]) || (jsonContent[i] == '-' && std::isdigit(jsonContent[i + 1]))){
+            std:: string number = "";
+            if(jsonContent[i] == '-'){
+                number+= jsonContent[i];
+                i++;
+            }
+            while(i < jsonContent.size() && std::isdigit(jsonContent[i]))
+            {
+                number+= jsonContent[i];
+                i++;
+            }
+            if(jsonContent[i]=='.' && i < jsonContent.size()){
+                number+= jsonContent[i];
+                i++;
+            }
+            while(i < jsonContent.size() && std::isdigit(jsonContent[i]))
+            {
+                number+= jsonContent[i];
+                i++;
+            }
+            if(!checkValidNumber(number)){
+                std::cerr << "Error: Invalid number value: " << number << std::endl;
+                return true;
+            }
+        }
 
         while (i < jsonContent.size() && std::isspace(jsonContent[i])) {
             i++;
         }
+        
 
         if (jsonContent[i] == ',') {
             i++;
         } else if (jsonContent[i] == '}') {
             i++;
         } else {
-            std::cerr << "Syntax Error: Expected comma or closing bracket." << std::endl;
+            std::cerr << "Error: Unexpected token after value." << std::endl;
             return true;
         }
     }
@@ -180,6 +207,13 @@ bool checkValidObject(const std::string& object) {
         return false;
     }
     return true;
+}
+
+bool checkValidNumber(const std::string &number)
+{
+    // This can be improved based on specific needs
+    std::regex numberRegex("^-?\\d+(\\.\\d+)?$");
+    return std::regex_match(number, numberRegex);
 }
 
 // Function to check for comma-related issues (you can implement further logic here)

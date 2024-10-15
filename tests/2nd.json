@@ -1,14 +1,5 @@
 {
-    "person": {
-      "name": "Bob",
-      "age": 30,
-      "hobbies": ["painting", "hiking"],
-      "address": {
-        "street": "456 Elm St",
-        "city": "Nowhere"
-      }
-
-    }
-  }
-    
-  
+  "name": "Sneha",
+  "what": "Wahrjfns",
+  "124": 123123
+}

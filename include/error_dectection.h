@@ -17,6 +17,6 @@ bool checkKeyValuePair(const std::string& jsonContent);
 bool checkCommas(const std::string& jsonContent);
 bool validKey(const std:: string& key);
 bool checkValidObject(const std::string &object);
-
+bool checkValidNumber(const std::string &number);
 
 #endif // ERROR_DETECTION_H
