@@ -1,212 +1,189 @@
-#include<iostream>
+#include <iostream>
+#include <stack>
 #include <regex>
 #include "../include/error_dectection.h"
 
-bool detectErrors(const std:: string& jsonContent)
-{
+// Function to detect errors in the JSON content
+bool detectErrors(const std::string& jsonContent) {
     bool hasError = false;
 
-    if(checkBrackets(jsonContent)){
+    if (checkBrackets(jsonContent)) {
         hasError = true;
     }
-    if(checkCommas(jsonContent)){
+    if (checkCommas(jsonContent)) {
         hasError = true;
     }
-    if(checkKeyValuePair(jsonContent)){
+    if (checkKeyValuePair(jsonContent)) {
         hasError = true;
     }
     return hasError;
 }
 
-bool checkBrackets(const std::string& jsonContent)
-{
-    std:: stack<char>st;
-    for(int i = 0; i < jsonContent.size(); ++i){
+// Function to check for bracket mismatches
+bool checkBrackets(const std::string& jsonContent) {
+    std::stack<char> st;
+    for (int i = 0; i < jsonContent.size(); ++i) {
         char ch = jsonContent[i];
-        if(ch == '{' || ch == '['){
+        if (ch == '{' || ch == '[') {
             st.push(ch);
-        }
-        else if(ch == '}'|| ch == ']'){
-            if(st.empty()){
+        } else if (ch == '}' || ch == ']') {
+            if (st.empty()) {
                 std::cerr << "Error: Unmatched closing bracket." << std::endl;
                 return true;
             }
-            else if((ch=='}' && st.top() !='{')||(ch == ']'&&st.top()!='[')){
+            if ((ch == '}' && st.top() != '{') || (ch == ']' && st.top() != '[')) {
                 std::cerr << "Error: Mismatched brackets." << std::endl;
                 return true;
-            }
-            else{
+            } else {
                 st.pop();
             }
         }
     }
-    if(st.empty()){
-        return false;
+    if (!st.empty()) {
+        std::cerr << "Error: Unmatched opening bracket." << std::endl;
+        return true;
     }
-    std::cerr << "Error: Unmatched opening bracket." << std::endl;
-    return true;
+    return false;
 }
 
+// Function to check key-value pairs
 bool checkKeyValuePair(const std::string& jsonContent) {
-    if (jsonContent[0] != '{') {
-        std::cerr << "Error: Opening Bracket is missing" << std::endl;
+    int i = 0;
+    while (i < jsonContent.size() && std::isspace(jsonContent[i])) {
+        i++;
+    }
+
+    if (jsonContent[i] != '{') {
+        std::cerr << "Error: Opening Bracket is missing." << std::endl;
         return true;
     }
-    if (jsonContent[jsonContent.size() - 1] != '}') {
-        std::cerr << "Error: Closing Bracket is missing" << std::endl;
-        return true;
-    }
-    int i = 1;
-    while (i < jsonContent.size() - 1 && std::isspace(jsonContent[i])) {
-            i++;
-        }
-    while (i < jsonContent.size() - 1) {
-        // Skip whitespace
-        while (i < jsonContent.size() - 1 && std::isspace(jsonContent[i])) {
+
+    i++;  // Move past opening bracket
+
+    while (i < jsonContent.size()) {
+        while (i < jsonContent.size() && std::isspace(jsonContent[i])) {
             i++;
         }
 
-        // Extract key
+        if (jsonContent[i] == '}') {
+            i++;
+            continue;
+        }
+
         if (jsonContent[i] != '\"') {
-            //std:: cout << "Hey I am here" << std:: endl;
             std::cerr << "Syntax Error: Key must be enclosed in quotes." << std::endl;
             return true;
         }
-        i++;
 
-        std::string key;
-        while (jsonContent[i] != '\"' && i < jsonContent.size() - 1) {
+        i++;
+        std::string key = "";
+        while (i < jsonContent.size() && jsonContent[i] != '\"') {
             key += jsonContent[i];
             i++;
         }
 
         if (jsonContent[i] != '\"') {
-            std::cerr << "Syntax Error: Key must be enclosed in quotes." << std::endl;
+            std::cerr << "Error: Missing closing quote in key." << std::endl;
             return true;
         }
 
-        // Validate key
+        i++;  // Move past closing quote
+
         if (!validKey(key)) {
             std::cerr << "Error: Invalid Key: \"" << key << "\"" << std::endl;
             return true;
         }
 
-        i++; // Move past closing quote
-
-        // Check for colon
-        while (i < jsonContent.size() - 1 && std::isspace(jsonContent[i])) {
+        while (i < jsonContent.size() && std::isspace(jsonContent[i])) {
             i++;
         }
+
         if (jsonContent[i] != ':') {
             std::cerr << "Syntax Error: Missing colon (:) after key." << std::endl;
             return true;
         }
-        i++; // Move past colon
 
-        // Skip whitespace for value
-        while (i < jsonContent.size() - 1 && std::isspace(jsonContent[i])) {
+        i++;  // Move past colon
+
+        while (i < jsonContent.size() && std::isspace(jsonContent[i])) {
             i++;
         }
-        
-        // Implement logic to check for valid value
-        // ...
-        // value can be array, string , number , object 
-        // lets check for the object 
-        if(jsonContent[i] == '{') {
-            std::string obj = "";
-            while(jsonContent[i] != '}') {
-                obj += jsonContent[i];
+
+        if (jsonContent[i] == '{') {
+            std::string nestedObject = "";
+            nestedObject+= jsonContent[i];
+            int braceCount = 1;
+            i++;
+            while (i < jsonContent.size() && braceCount > 0) {
+                if (jsonContent[i] == '{') braceCount++;
+                if (jsonContent[i] == '}') braceCount--;
+                nestedObject += jsonContent[i];
                 i++;
             }
-            obj += jsonContent[i]; // include closing '}'
-            i++; // Move past the closing brace
 
-            if(!checkValidObject(obj)) {
-                std::cerr << "Invalid object: " << std::endl;
+            if (braceCount != 0) {
+                std::cerr << "Error: Unmatched brackets in nested object." << std::endl;
                 return true;
             }
+
+            if (!checkValidObject(nestedObject)) {
+                std::cerr << "Invalid object: " << nestedObject << std::endl;
+                return true;
+            }
+        } else if (jsonContent[i] == '\"') {
+            i++;  // Move past the opening quote
+            std::string str = "";
+            while (i < jsonContent.size() && jsonContent[i] != '\"') {
+                str += jsonContent[i];
+                i++;
+            }
+
+            if (jsonContent[i] != '\"') {
+                std::cerr << "Error: Missing closing quote in value." << std::endl;
+                return true;
+            }
+
+            i++;  // Move past the closing quote
         }
 
-        // lets check for string 
-        if(jsonContent[i] == '\"') { // Start of string value
-            i++; // Move past the opening quote
-            std::string str = "";
-    
-            while (i < jsonContent.length() && jsonContent[i] != '\"') {
-                // Handle escape sequences (like \")
-                if (jsonContent[i] == '\\' && i + 1 < jsonContent.length()) {
-                    str += jsonContent[i]; // Add escape character
-                    i++;
-                    str += jsonContent[i]; // Add the escaped character
-                } else {
-            str += jsonContent[i];
-            }
+        while (i < jsonContent.size() && std::isspace(jsonContent[i])) {
             i++;
         }
 
-            if (jsonContent[i] != '\"') {
-               std::cerr << "Error: missing \" in the value" << std::endl;
+        if (jsonContent[i] == ',') {
+            i++;
+        } else if (jsonContent[i] == '}') {
+            i++;
+        } else {
+            std::cerr << "Syntax Error: Expected comma or closing bracket." << std::endl;
             return true;
-            }
-            i++; // Move past the closing quote
-
-    // No need to validate string values with validKey function
-}
-
-        // Skip to next key-value pair
-        // while (i < jsonContent.size() - 1 && jsonContent[i] != ',') {
-        //     i++;
-        // }
-        // if (jsonContent[i] == ',') {
-        //     i++; // Move past comma for the next iteration
-        // }
+        }
     }
 
     return false;
 }
 
-
-
+// Function to validate a key
 bool validKey(const std::string& key) {
-
-    // Initialize a counter for escape sequences
-    bool isEscaped = false;
-
-    // Iterate through the key excluding the surrounding quotes
-    for (int i = 1; i < key.length() - 1; ++i) {
-        char ch = key[i];
-
-        // Check for escape character
-        if (ch == '\\') {
-            isEscaped = !isEscaped; // Toggle the escaped state
-            continue;
-        }
-
-        // If not escaped, check for invalid characters
-        if (!isEscaped && (ch == '\"' || ch == '\n' || ch == '\r' || ch == '\t')) {
+    for (char ch : key) {
+        if (ch == '\"' || ch == '\n' || ch == '\r' || ch == '\t') {
             std::cerr << "Error: Invalid character in key: \"" << key << "\"" << std::endl;
             return false;
         }
-
-        // Reset the escape state after processing a valid character
-        isEscaped = false;
     }
-
-    // If we reach here, the key is valid
     return true;
 }
 
-bool checkValidObject(const std::string &object)
-{
-    if(detectErrors(object)){
+// Function to check the validity of a nested object
+bool checkValidObject(const std::string& object) {
+    if (detectErrors(object)) {
         return false;
     }
     return true;
 }
 
-
-
-bool checkCommas(const std::string& jsonContent){
-    // need to write logic here 
+// Function to check for comma-related issues (you can implement further logic here)
+bool checkCommas(const std::string& jsonContent) {
+    // Implement logic for detecting trailing commas, missing commas, etc.
     return false;
 }
