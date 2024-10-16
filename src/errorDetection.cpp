@@ -61,13 +61,14 @@ bool checkKeyValuePair(const std::string& jsonContent) {
     i++;  // Move past opening bracket
 
     while (i < jsonContent.size()) {
-        while (i < jsonContent.size() && std::isspace(jsonContent[i])) {
-            i++;
-        }
 
         if (jsonContent[i] == '}') {
             i++;
             continue;
+        }
+
+        while (i < jsonContent.size() && std::isspace(jsonContent[i])) {
+            i++;
         }
 
         if (jsonContent[i] != '\"') {
@@ -171,6 +172,15 @@ bool checkKeyValuePair(const std::string& jsonContent) {
                 return true;
             }
         }
+        // if the key is bool or NULL
+        else if(i+4 < jsonContent.size() && (jsonContent.substr(i, 4)=="true" || jsonContent.substr(i, 4)=="null") ){
+            i+=4;
+        }
+        else if(i+5 < jsonContent.size() && jsonContent.substr(i, 5)=="false"){
+            i+=5;
+        }
+
+
 
         while (i < jsonContent.size() && std::isspace(jsonContent[i])) {
             i++;
