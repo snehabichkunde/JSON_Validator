@@ -180,6 +180,29 @@ bool checkKeyValuePair(const std::string& jsonContent) {
             i+=5;
         }
 
+        else if(jsonContent[i]=='['){
+            std::string array = "";
+            array += jsonContent[i];
+            i++;
+            while (i < jsonContent.size() && std::isspace(jsonContent[i])){
+                i++;
+            }
+            while(i<jsonContent.size() && jsonContent[i]!= ']'){
+                array += jsonContent[i];
+                i++;
+            }
+            array += jsonContent[i];
+            if(i==jsonContent.size()){
+                std:: cerr << "Error: Arrya beacket is not closed" << std::endl;
+                return true;
+            }
+            if (!checkValidArray(array, i)) {
+                std::cerr << "Error: Invalid Array" << std::endl;
+                return true;
+        }
+
+            i++;
+        }
 
 
         while (i < jsonContent.size() && std::isspace(jsonContent[i])) {
@@ -213,6 +236,9 @@ bool validKey(const std::string& key) {
 
 // Function to check the validity of a nested object
 bool checkValidObject(const std::string& object) {
+    if(object.empty()){
+        return true;
+    }
     if (detectErrors(object)) {
         return false;
     }
@@ -226,8 +252,83 @@ bool checkValidNumber(const std::string &number)
     return std::regex_match(number, numberRegex);
 }
 
-// Function to check for comma-related issues (you can implement further logic here)
-bool checkCommas(const std::string& jsonContent) {
-    // Implement logic for detecting trailing commas, missing commas, etc.
+
+bool checkValidArray(const std::string &array, int &i) {
+    // Check if array starts and ends with correct brackets
+    if (array[i] != '[') {
+        std::cerr << "Error: Array must start with '['." << std::endl;
+        return false;
+    }
+
+    i++; // Skip the opening bracket
+
+    // Loop through the array elements
+    while (i < array.size()) {
+        // Skip whitespace
+        while (i < array.size() && std::isspace(array[i])) i++;
+
+        // Check for array closing bracket
+        if (array[i] == ']') {
+            i++; // Move past closing bracket
+            return true; // Valid array
+        }
+
+        // Parse string elements in the array
+        if (array[i] == '"') {
+            i++; // Move past the opening quote
+            while (i < array.size() && array[i] != '"') {
+                i++;
+            }
+
+            // If we reached the end without finding a closing quote, it's an error
+            if (i == array.size() || array[i] != '"') {
+                std::cerr << "Error: String in array is not properly closed." << std::endl;
+                return false;
+            }
+            i++; // Move past the closing quote
+        } 
+        // Parse numbers
+        else if (std::isdigit(array[i]) || array[i] == '-') {
+            while (i < array.size() && (std::isdigit(array[i]) || array[i] == '.')) {
+                i++;
+            }
+        } 
+        // Parse booleans and null
+        else if (array.substr(i, 4) == "true" || array.substr(i, 4) == "null") {
+            i += 4; // Move past "true" or "null"
+        } else if (array.substr(i, 5) == "false") {
+            i += 5; // Move past "false"
+        } 
+        // Handle nested arrays
+        else if (array[i] == '[') {
+            if (!checkValidArray(array, i)) {
+                return false; // If nested array is invalid, return error
+            }
+        } 
+        // Handle unexpected characters
+        else {
+            std::cerr << "Error: Invalid element in array." << std::endl;
+            return false;
+        }
+
+        // Skip whitespace and check for commas
+        while (i < array.size() && std::isspace(array[i])) i++;
+        if (i < array.size() && array[i] == ',') {
+            i++; // Move past the comma
+        } else if (array[i] != ']' && i < array.size()) {
+            std::cerr << "Error: Array element must be followed by a comma or closing bracket." << std::endl;
+            return false;
+        }
+    }
+
+    std::cerr << "Error: Array bracket is not closed." << std::endl;
     return false;
 }
+
+
+
+// Function to check for comma-related issues (you can implement further logic here)
+// bool checkCommas(const std::string& jsonContent) {
+//     // Implement logic for detecting trailing commas, missing commas, etc.
+//     return false;
+// }
